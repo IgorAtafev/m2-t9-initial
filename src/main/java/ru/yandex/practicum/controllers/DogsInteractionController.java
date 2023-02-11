@@ -1,15 +1,18 @@
 package ru.yandex.practicum.controllers;
 
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.exception.IncorrectCountException;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/dogs")
 public class DogsInteractionController {
+
     private int happiness = 0;
 
     @GetMapping("/converse")
@@ -20,6 +23,14 @@ public class DogsInteractionController {
 
     @GetMapping("/pet")
     public Map<String, String> pet(@RequestParam(required = false) final Integer count) {
+        if (count == null) {
+            throw new IncorrectCountException("The count parameter is null.");
+        }
+
+        if (count <= 0) {
+            throw new IncorrectCountException("The count parameter is negative or equal to zero.");
+        }
+
         happiness += count;
         return Map.of("action", "Вильнул хвостом. ".repeat(count));
     }
@@ -27,5 +38,13 @@ public class DogsInteractionController {
     @GetMapping("/happiness")
     public Map<String, Integer> happiness() {
         return Map.of("happiness", happiness);
+    }
+
+    @ExceptionHandler
+    public Map<String, String> handleIncorrectCount(final IncorrectCountException e) {
+        return Map.of(
+                "error", "An error has occurred!",
+                "errorMessage", e.getMessage()
+        );
     }
 }
